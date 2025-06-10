@@ -66,7 +66,7 @@ Optionally, you can submit your own version of the prefix and suffix of the comp
 If they are not provided, the default values (the entire prefix and suffix of the file) will be used. 
 In that case, the format of an entrypoint in the file is:
 ```
-{"context": "**context for prediction", "prefix": "custom prefix", "suffix": "custom suffix"}
+{"context": "context for prediction", "prefix": "custom prefix", "suffix": "custom suffix"}
 ```
 
 ### Submitting your solution
