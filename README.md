@@ -62,12 +62,13 @@ The predictions are expected in a JSON Lines file, with each object having a ``c
 ```
 The number and order of the objects should correspond to the objects in the input ``.jsonl`` file.
 
-Optionally, you can submit your own version of the prefix and suffix of the completion file. 
-If they are not provided, the default values (the entire prefix and suffix of the file) will be used. 
-In that case, the format of an entrypoint in the file is:
+By default, the entire prefix and suffix of the file will be provided to the model.
+Optionally, you can submit your own version of the prefix and suffix in the completion file.  
+In that case, the format of an entry in the file is:
 ```
 {"context": "context for prediction", "prefix": "custom prefix", "suffix": "custom suffix"}
 ```
+Both `prefix` and `suffix` are optional in each entry: it is acceptable if each of the fields is only specified in some of the entries. 
 
 ### Submitting your solution
 
