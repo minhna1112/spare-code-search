@@ -34,9 +34,10 @@ print(f"Running the {strategy} baseline for stage '{stage}'")
 FILE_SEP_SYMBOL = "<|file_sep|>"
 # format to compose context from a file
 FILE_COMPOSE_FORMAT = "{file_sep}{file_name}\n{file_content}"
+MIN_LINES = 10  # Minimum number of lines required in the file
+MAX_LINES = 10  # Maximum number of lines for prefix/suffix to be trimmed into
 
-
-def find_random_file(root_dir: str, min_lines: int = 10) -> str:
+def find_random_file(root_dir: str, min_lines: int = MIN_LINES) -> str:
     """
     Select a random file:
         - in the given language
@@ -66,7 +67,7 @@ def find_random_file(root_dir: str, min_lines: int = 10) -> str:
     return random.choice(code_files) if code_files else None
 
 
-def find_bm25_file(root_dir: str, prefix: str, suffix: str, min_lines: int = 10) -> str:
+def find_bm25_file(root_dir: str, prefix: str, suffix: str, min_lines: int = MIN_LINES) -> str:
     """
     Select the file:
         - in the given language
@@ -114,7 +115,7 @@ def find_bm25_file(root_dir: str, prefix: str, suffix: str, min_lines: int = 10)
     return file_names[best_idx] if file_names else None
 
 
-def find_random_recent_file(root_dir: str, recent_filenames: list[str], min_lines: int = 10) -> str:
+def find_random_recent_file(root_dir: str, recent_filenames: list[str], min_lines: int = MIN_LINES) -> str:
     """
     Select the most recent file:
         - in the given language
@@ -145,13 +146,13 @@ def find_random_recent_file(root_dir: str, recent_filenames: list[str], min_line
 def trim_prefix(prefix: str):
     prefix_lines = prefix.split("\n")
     if len(prefix_lines) > 10:
-        prefix = "\n".join(prefix_lines[-10:])
+        prefix = "\n".join(prefix_lines[-MAX_LINES:])
     return prefix
 
 def trim_suffix(suffix: str):
     suffix_lines = suffix.split("\n")
     if len(suffix_lines) > 10:
-        suffix = "\n".join(suffix_lines[:10])
+        suffix = "\n".join(suffix_lines[:MAX_LINES])
     return suffix
 
 # Path to the file with completion points
