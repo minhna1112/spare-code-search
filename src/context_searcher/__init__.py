@@ -57,7 +57,7 @@ def trim_suffix(suffix: str) -> str:
 class ContextSearcher(object):
     """Main class to coordinate different search strategies"""
     def __init__(self, strategy: BaseSearchStrategy, stage: str = "practice",
-                 language: str = "kotlin"):
+                 language: str = "kotlin")->None:
         self.strategy = strategy
         self.stage = stage
         self.language = language
@@ -93,10 +93,3 @@ class ContextSearcher(object):
     def set_strategy(self, strategy: BaseSearchStrategy) -> None:
         """Change the search strategy"""
         self.strategy = strategy
-    
-     
-        
-            
-if __name__ == "__main__":
-    context_searcher = ContextSearcher(stage="practice", language="kotlin", strategy="default")
-    context_searcher.get_all_completion_points()
