@@ -3,6 +3,7 @@ import argparse
 from .locality import LocalSearch
 from .recency import RecencySearch
 from .similarity import SimilaritySearch
+from .hybrid import HybridSearch
 import jsonlines
 import os
 from tqdm import tqdm
@@ -12,8 +13,10 @@ parser = argparse.ArgumentParser(description="Run context search experiments")
 parser.add_argument("--stage", type=str, default="practice", help="Stage of the project")
 parser.add_argument("--lang", type=str, default="kotlin", help="Programming language")
 parser.add_argument("--strategy", type=str, default="local",
-                    choices=["local", "recent", "similarity"],
+                    choices=["local", "recent", "similarity", "hybrid"],
                     help="Context search strategy to use")
+parser.add_argument("--level", type=int, default=0,
+                    help="Search level for local strategy (0: same dir, -1: parent dir, etc.)")
 parser.add_argument("--trim-prefix", action="store_true",
                     help="Trim the prefix to MAX_LINES")
 parser.add_argument("--trim-suffix", action="store_true",
@@ -23,9 +26,12 @@ args = parser.parse_args()
 
 # Select the appropriate strategy
 if args.strategy == "local":
-    strategy = LocalSearch()
+    strategy = LocalSearch(level=args.level)
+    args.strategy = f"locality-{args.level}"
 elif args.strategy == "recent":
     strategy = RecencySearch()
+elif args.strategy == "hybrid":
+    strategy = HybridSearch()
 else:  # similarity
     strategy = SimilaritySearch()
 
