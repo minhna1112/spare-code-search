@@ -7,6 +7,16 @@ from .. import BaseSearchStrategy, CompletionPoint
 class SimilaritySearch(BaseSearchStrategy):
     """Search strategy that uses BM25 to find similar files based on content"""
     
+    def __init__(self, top_k: int = None) -> None:
+        """
+        Initialize the SimilaritySearch strategy
+        
+        Args:
+            top_k: Number of top similar files to return. If None, returns all files sorted by similarity.
+        """
+        super().__init__()
+        self.top_k = top_k
+    
     def _prepare_bm25_str(self, s: str) -> list[str]:
         """Prepare string for BM25 by converting to lowercase and splitting into tokens"""
         return "".join(c if c.isalnum() else " " for c in s.lower()).split()
@@ -20,7 +30,7 @@ class SimilaritySearch(BaseSearchStrategy):
             repo_root: Root directory of the repository
             
         Returns:
-            List of file paths sorted by similarity score
+            List of file paths sorted by similarity score, limited to top_k if specified
         """
         corpus = []
         file_paths = []
@@ -56,5 +66,9 @@ class SimilaritySearch(BaseSearchStrategy):
         scored_files = list(zip(scores, file_paths))
         # Sort by score in descending order
         scored_files.sort(reverse=True)
+        
+        # Limit to top_k results if specified
+        if self.top_k is not None:
+            scored_files = scored_files[:self.top_k]
         
         return [file_path for _, file_path in scored_files]
