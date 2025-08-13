@@ -2,3 +2,4 @@
 data/repositories*
 **.pyc
 build/volumes
+data/*.zip
