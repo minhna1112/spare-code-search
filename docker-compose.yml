@@ -1,11 +1,11 @@
 services:
   # Zoekt Web Server - provides search UI and API
   zoekt-webserver:
-    image: zoekt-local
+    image: zoekt-local:v0.0.1
     ports:
       - "6070:6070"  # Default zoekt-webserver port
     volumes:
-      - ./zoekt-index-data-public:/data/index:ro  # Read-only access to index data
+      - ./build/volumes/zoekt-index-data/${STAGE:-public}/${LANGUAGE:-kotlin}:/data/index:ro  # Read-only access to index data
     environment:
       - DATA_DIR=/data/index
       - GOGC=25
@@ -19,10 +19,10 @@ services:
 
   # Manual indexing service for local repositories
   zoekt-indexer:
-    image: zoekt-local
+    image: zoekt-local:v0.0.1
     volumes:
-      - ./zoekt-index-data-public:/data/index
-      - ./repos/repositories-kotlin-public:/repos:ro  # Mount local repos directory
+      - ./build/volumes/zoekt-index-data/${STAGE:-public}/${LANGUAGE:-kotlin}:/data/index
+      - ./data/repositories-${LANGUAGE:-kotlin}-${STAGE:-public}:/repos:ro  # Mount local repos directory
     working_dir: /repos
     command: |
       sh -c "
