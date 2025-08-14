@@ -1,0 +1,7 @@
+SEPARATOR_COMMENT = "\n/**<FIM>*/\n"
+PYTHON= "python"
+KOTLIN = "kotlin"
+SUPPORTED_LANGUAGES = [PYTHON, KOTLIN]
+MELLUM = "JetBrains/Mellum-4b-sft-"
+CODESTRAL ="mistralai/Codestral-22B-v0.1"
+QWEN_25_CODER = "Qwen/Qwen2.5-Coder-1.5B"
