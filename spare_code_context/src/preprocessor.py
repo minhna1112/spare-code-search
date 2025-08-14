@@ -22,7 +22,7 @@ class Preprocessor:
         """
         Get the original file path from the datapoint.
         """
-        repo_path = os.path.join(self.config.data_root, "-".join([datapoint["repo"].replace("/", "__"), datapoint['revision']]))
+        repo_path = os.path.join(self.config.data_root, f"repositories-{self.config.language}-{self.config.stage}", "-".join([datapoint["repo"].replace("/", "__"), datapoint['revision']]))
         file_path = repo_path + "/" + datapoint['path']
         logger.debug(f"Original file path: {file_path}")
         return file_path
