@@ -1,6 +1,6 @@
 from preprocessor import Preprocessor
 from configs.base import PreprocessorConfig
-from datapoint import DataPoint
+from datapoint import DataPoint, Prediction
 from logging import getLogger
 import os
 import jsonlines
@@ -31,6 +31,15 @@ class Runner:
                 completion_points.append(DataPoint(**datapoint))
         return completion_points
     
+    def write_predictions(self, predictions: List[Prediction], output_file: str = "predictions.jsonl"):
+        """
+        Write predictions to a JSONL file.
+        """
+        with jsonlines.open(output_file, 'w') as writer:
+            for prediction in predictions:
+                writer.write(prediction.dict())
+        logger.info(f"Predictions written to {output_file}")
+    
     def run(self, datapoint: DataPoint):
         """
         Run the preprocessor on the given datapoint.
@@ -52,6 +61,7 @@ class Runner:
 
         return output
     
+    
     def run_all(self):
         """
         Run the preprocessor on all completion points.
@@ -63,8 +73,19 @@ class Runner:
             result = self.run(datapoint)
             results.append(result)
         
-        return results
-    
+        predictions = []
+        for result in tqdm(results):
+            logger.debug(f"Result: {result}")
+            prediction = Prediction(
+                context = "a",
+                prefix = "b",
+                suffix = "c"
+            )
+            predictions.append(prediction)
+
+        self.write_predictions(predictions, output_file=os.path.join(self.config.predictions_root, f"{self.config.language}-{self.config.stage}-predictions.jsonl"))
+
+
 if __name__ == "__main__":
    
     # Load the configuration
@@ -74,5 +95,4 @@ if __name__ == "__main__":
     runner = Runner(config)
     results = runner.run_all()
     
-    # Optionally, save results to a file or process them further
-    logger.info(f"Processed {len(results)} datapoints.")
+    

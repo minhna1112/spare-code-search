@@ -1,6 +1,12 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
 
+
+class Prediction(BaseModel):
+    context: str = ""
+    prefix: str = ""
+    suffix: str = ""
+
 class DataPoint(BaseModel):
     """
     Pydantic model for code completion/search dataset entries.

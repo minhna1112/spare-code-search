@@ -22,7 +22,10 @@ class PreprocessorConfig(BaseConfig):
 
     def __repr__(self):
         return f"PreprocessorConfig(language={self.language}, model_name={self.model_name}, stage={self.stage}, use_tokenizer={self.use_tokenizer}, data_root={self.data_root}, samples_root={self.samples_root})"
-
+    
+class PostProcessorConfig(PreprocessorConfig):
+    def __repr__(self):
+        return f"PostProcessorConfig(language={self.language}, model_name={self.model_name}, stage={self.stage}, use_tokenizer={self.use_tokenizer}, data_root={self.data_root}, samples_root={self.samples_root})"
 class SearchConfig:
     """
     Configuration class for search settings.
