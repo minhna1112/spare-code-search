@@ -1,4 +1,16 @@
 services:
+
+  spare-code-context:
+    build:
+      context: spare_code_context
+      dockerfile: Dockerfile
+    image: spare-code-context:latest
+    volumes:
+      - ./data:/data  # Mount local data directory
+    environment:
+      - STAGE=${STAGE:-practice}  # Default to 'public' stage if not set
+      - LANGUAGE=${LANGUAGE:-python}  # Default to 'kotlin' language if not set
+
   # Zoekt Web Server - provides search UI and API
   zoekt-webserver:
     image: zoekt-local:v0.0.1

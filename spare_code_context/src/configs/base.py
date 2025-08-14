@@ -7,10 +7,10 @@ import os
 class BaseConfig(BaseModel):
     language: Literal[SUPPORTED_LANGUAGES] = os.getenv('LANGUAGE', PYTHON)
     stage: str = os.getenv('STAGE', 'practice')
-    data_root = os.getenv('DATA_ROOT', 'data')
-    samples_root = os.getenv('SAMPLES_ROOT', 'samples')
+    data_root: str = os.getenv('DATA_ROOT', '/data')
+    samples_root: str = os.getenv('SAMPLES_ROOT', '/samples')
+    predictions_root: str = os.getenv('PREDICTIONS_ROOT', '/predictions')
 
-    
 
 class PreprocessorConfig(BaseConfig):
     """

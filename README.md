@@ -78,3 +78,15 @@ Go to the [competition page](https://eval.ai/web/challenges/challenge-page/2516)
 The contexts are used to generate completions with three different models based on their similarity to the reference text with the ChrF score metric. 
 The final score is the average across the scores of the three models.
 Please read the [Evaluation](https://eval.ai/web/challenges/challenge-page/2516/evaluation) section of the competition page for details.
+
+
+
+```bash
+build_spare_code_context_image:
+    # Build the spare_code_context image
+    cd spare_code_context && docker build -t spare_code_context:latest .
+# index_data:
+# 	STAGE=practice LANGUAGE=python docker compose up zoekt-indexer
+
+# run_webserver:
+# 	STAGE=practice LANGUAGE=python docker compose up zoekt-webserver```

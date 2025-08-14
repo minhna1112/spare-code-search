@@ -1,11 +1,15 @@
 
 from transformers import AutoTokenizer
-from .utils import extract_diff, get_parser, code_to_tree, code_to_tokens, get_tokenizer_name_from_model
-from .configs.constants import SEPARATOR_COMMENT
-from .configs.base import PreprocessorConfig
-from .datapoint import DataPoint
+from utils import extract_diff, get_parser, code_to_tree, code_to_tokens, get_tokenizer_name_from_model
+from configs.constants import SEPARATOR_COMMENT
+from configs.base import PreprocessorConfig
+from datapoint import DataPoint
 from typing import Dict, Tuple
+import os
 
+from logging import getLogger
+
+logger = getLogger(__name__)
 
 class Preprocessor:
     def __init__(self, config: PreprocessorConfig)-> None:
@@ -20,6 +24,7 @@ class Preprocessor:
         """
         repo_path = os.path.join(self.config.data_root, "-".join([datapoint["repo"].replace("/", "__"), datapoint['revision']]))
         file_path = repo_path + "/" + datapoint['path']
+        logger.debug(f"Original file path: {file_path}")
         return file_path
 
     def get_original_code(self, datapoint: DataPoint | Dict) -> str:

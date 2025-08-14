@@ -1,10 +1,11 @@
 import diff_match_patch
 from tree_sitter import Parser
+import tree_sitter
 from tree_sitter_languages import get_language, get_parser
 from transformers import AutoTokenizer
 from typing import List, Tuple
 import os
-from .constants import MELLUM
+from configs.constants import MELLUM
 
 def extract_diff(incomplete_code, original_code) -> str:
     """
