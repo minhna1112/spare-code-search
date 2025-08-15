@@ -4,8 +4,9 @@ import os
 from preprocessor import DataPoint, Preprocessor
 from utils import get_merged_snippets_from_file
 class PostProcessor:
-    def __init__(self, config: PostProcessorConfig) -> None:
+    def __init__(self, config: PostProcessorConfig, preprocessor: Preprocessor) -> None:
         self.config = config
+        self.preprocessor = preprocessor
 
     def compose_context(self, file_name, content):
         return self.config.file_separator + file_name + "\n" + content
@@ -20,11 +21,11 @@ class PostProcessor:
         ]
 
     def count_tokens(self, code: str | list[str], 
-                     preprocessor: Preprocessor) -> int:
+                     ) -> int:
         """
         Count the number of tokens in the code.
         """
-        return preprocessor.count_tokens(code)
+        return self.preprocessor.count_tokens(code)
  
     def postprocess_search_results(
         self,
@@ -44,7 +45,7 @@ class PostProcessor:
         processed_contexts = []
 
         for file in files[:self.config.top_k_file]:
-            file_path = os.path.join(self.config.data_root, file['Repository'], file['FileName'])
+            file_path = os.path.join(self.config.data_root,f'repositories-{self.config.language}-{self.config.stage}',file['Repository'], file['FileName'])
             with open(file_path, 'r') as f:
                 file_content = f.read()
             context_str = self.compose_context(file['FileName'], file_content)
@@ -80,6 +81,7 @@ class PostProcessor:
     def postprocess(self, datapoint: DataPoint,  search_results: dict) -> list[dict]:
         prefix = ""
         suffix = ""
+        datapoint = datapoint.dict() if isinstance(datapoint, DataPoint) else datapoint
         if self.config.use_whole_prefix and self.config.use_whole_suffix:
             suffix = datapoint['suffix']
             prefix = datapoint['prefix']
@@ -88,7 +90,7 @@ class PostProcessor:
             prefix = datapoint['diff'].split(SEPARATOR_COMMENT)[0]
             suffix = datapoint['diff'].split(SEPARATOR_COMMENT)[1]
 
-        num_token_from_prefix_and_suffix = len(self.count_tokens(prefix + suffix))
+        num_token_from_prefix_and_suffix = self.count_tokens(prefix + suffix)
         possible_context_tokens = self.config.max_tokens - num_token_from_prefix_and_suffix - self.config.max_reserved_tokens # reserved tokens for the model to generate
         
         postprocessed_results = {"context": ""}
