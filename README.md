@@ -1,22 +1,7 @@
-# Context Collection Competition Starter Kit
+# Spare Code Context
 
-Welcome to the starter kit for the [Context Collection Competition](https://jb.gg/co4). 
-It will guide you from the moment of downloading data to running a baseline solution and making your first submission.
-Please feel free to fork the starter kit to use it as the starting point for your solutions.
-
-### Objective
-The objective of the competition is to implement a context collection strategy that yields the most accurate code completions when provided to LLMs.
-Please read the [competition page](https://jb.gg/co4) for details.
-
-## Getting Started 
-
-### Data Preparation
-
-The starter kit expects that data files are stored in the `data` folder. 
-`stage` is the competition stage, for the files already available in the starter kit `stage = "start"`. 
-`language` is the language split, `kotlin` or `python`.
-
-The structure for data is as follows:
+## Prepare Data
+The structure for data is kept in accordance with the original competition data structure, which is as follows:
 ```bash
 data
 ├── {language}-{stage}.jsonl # Competition data
@@ -30,63 +15,46 @@ To prepare data for the starter kit:
 2. Put the `{language}-{stage}.jsonl` file (datapoints) and the `{language}-{stage}.zip` archive (repos) to the `data` folder.
 3. Run `./prepare_data.sh practice python`, possibly replacing `practice` with the stage and `python` with `kotlin`.
 
-
-### Running the baselines
-
-The starter kit contains two baselines in [baselines.py](baselines.py) and an option to modify prefix/suffix of the completion file. 
-1. Selecting a random Python file from the repository.
-2. Selecting a single Python file according to the [BM-25](https://en.wikipedia.org/wiki/Okapi_BM25) metric. 
-
-
-
-To run the baselines:
-1. `poetry install --no-root` &ndash; install dependencies via poetry
-2. `poetry run python baselines.py --stage practice --strategy random --lang python` &ndash; run the baselines
-   - You can replace `practice` with `public` to generate a complete submission for the competition
-   - You can replace `random` with another strategy, e.g., `bm25`
-   - You can replace `python` with `kotlin` for another split
-   - You can provide `--trim-prefix` and/or `trim-suffix` to modify the used prefix and suffix of the completion file by trimming it to 10 lines
-3. The prediction file will be saved in the `predictions` folder.
-
-### Implementing your own strategy
-Please look at the implementation of the baselines in [baselines.py](baselines.py) for an example.
-If the selected context contains multiple files, their parts included in the context should be separated by `<|file_sep|>`.
-
-### Prediction file format
-The predictions are expected in a JSON Lines file, with each object having a ``context`` field:
-```
-{"context": "**context for prediction 1**"}
-{"context": "**context for prediction 2**"}
-...
-{"context": "**context for prediction N**"}
-```
-The number and order of the objects should correspond to the objects in the input ``.jsonl`` file.
-
-By default, the entire prefix and suffix of the file will be provided to the model.
-Optionally, you can submit your own version of the prefix and suffix in the completion file.  
-In that case, the format of an entry in the file is:
-```
-{"context": "context for prediction", "prefix": "custom prefix", "suffix": "custom suffix"}
-```
-Both `prefix` and `suffix` are optional in each entry: it is acceptable if each of the fields is only specified in some of the entries. 
-
-### Submitting your solution
-
-Go to the [competition page](https://eval.ai/web/challenges/challenge-page/2516), enter the competition, select the stage, and upload the generated prediction file.
-
-### Evaluation
-The contexts are used to generate completions with three different models based on their similarity to the reference text with the ChrF score metric. 
-The final score is the average across the scores of the three models.
-Please read the [Evaluation](https://eval.ai/web/challenges/challenge-page/2516/evaluation) section of the competition page for details.
-
-
+## Build and Run Spare Code Context
+### Clone the repository and its submodules (Zoekt)
 
 ```bash
-build_spare_code_context_image:
-    # Build the spare_code_context image
-    cd spare_code_context && docker build -t spare_code_context:latest .
-# index_data:
-# 	STAGE=practice LANGUAGE=python docker compose up zoekt-indexer
+git clone --recurse-submodules https://github.com/minhna1112/spare-code-context.git
+git submodule update --remote zoekt
+```
+### Build the Zoekt Code Search Server Docker images on local machine
+```bash
+ cd zoekt && docker build -t zoekt-local:v0.0.1 .
+```
+## Index the data
+To index the data, you need to run the `zoekt-indexer` service. This service will read the data from the `data` folder and index it for searching. 
+```bash
+STAGE=public LANGUAGE=kotlin docker compose up zoekt-indexer
+```
+The Indexing process will take some time, depending on the size of the data and your machine's performance. Once the indexing is complete, you can start the `zoekt-webserver` service to provide a search interface.
+```bash
+STAGE=public LANGUAGE=kotlin docker compose up zoekt-webserver
+```
 
-# run_webserver:
-# 	STAGE=practice LANGUAGE=python docker compose up zoekt-webserver```
+
+### Build and run the Spare Code Context Docker image
+Everything is set up, and you can now build and run the Spare Code Context Docker image. Everytime you want to run the Spare Code Context, you need to run the following command:
+```bash
+docker compose up spare-code-context --build --force-recreate
+```
+You can modify the `docker-compose.yml` file to set the appropriate environment variables for your `STAGE` and `LANGUAGE`. All other volumes and environment variables are set in the `docker-compose.yml` file.
+```yml
+environment:
+      - STAGE=${STAGE:-practice}  # Default to 'public' stage if not set
+      - LANGUAGE=${LANGUAGE:-python}  # Default to 'kotlin' language if not set
+      - ZOEKT_URL=http://zoekt-webserver:6070/api/search  # URL of the zoekt web server
+```
+The `ZOEKT_URL` is the URL of the Zoekt web server that provides the search API, which should be left as is unless you have a custom setup.
+All the volumes are mounted to the `spare_code_context` container
+```yml
+    volumes:
+      - ./data:/data  # Mount local data directory
+      - ./predictions:/predictions  # Mount local predictions directory
+      - ./queries:/queries  # Mount local queries directory
+```
+After every run, you can find the predictions in the `predictions` folder, which will be created if it does not exist. The predictions will be saved in the format `{language}-{stage}-predictions.jsonl`, where `language` and `stage` are the same as in the `docker-compose.yml` file.
