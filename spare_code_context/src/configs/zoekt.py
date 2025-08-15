@@ -32,4 +32,8 @@ class SearchConfig(BaseConfig):
     """
     Configuration class for search settings.
     """
-    
+    num_context_lines: int = os.getenv('NUM_CONTEXT_LINES', 10)
+    max_results: int = os.getenv('MAX_RESULTS', 10)
+    max_retries: int = os.getenv('MAX_RETRIES', 3)
+    retry_delay: float = os.getenv('RETRY_DELAY', 0.2)
+    zoekt_url: str = os.getenv('ZOEKT_URL', 'http://localhost:6070/api/search')
