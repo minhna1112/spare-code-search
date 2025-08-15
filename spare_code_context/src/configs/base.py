@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from .constants import SUPPORTED_LANGUAGES, PYTHON, MELLUM
+from .constants import SUPPORTED_LANGUAGES, PYTHON, MELLUM, FILE_SEP, NUM_CONTEXT_LINES
 from typing import Literal
 import os
 from enum import Enum
@@ -24,6 +24,18 @@ class PreprocessorConfig(BaseConfig):
         return f"PreprocessorConfig(language={self.language}, model_name={self.model_name}, stage={self.stage}, use_tokenizer={self.use_tokenizer}, data_root={self.data_root}, samples_root={self.samples_root})"
     
 class PostProcessorConfig(PreprocessorConfig):
+    top_k_file: int = 1
+    top_k_matches: int = 5
+    merge_overlapping: bool = True
+    use_whole_prefix: bool = False
+    use_whole_suffix: bool = False
+    use_diff_prefix: bool = True
+    use_diff_suffix: bool = True
+    max_tokens: int = os.getenv('MAX_TOKENS', 8192) #8192 is from Mellum-4b-sft
+    max_reserved_tokens: int = os.getenv('MAX_RESERVED_TOKENS', 512) # reserved tokens for the model to generate
+    file_separator: str = os.getenv('FILE_SEPARATOR', FILE_SEP)
+    num_context_lines: int = os.getenv('NUM_CONTEXT_LINES', NUM_CONTEXT_LINES)
+
     def __repr__(self):
         return f"PostProcessorConfig(language={self.language}, model_name={self.model_name}, stage={self.stage}, use_tokenizer={self.use_tokenizer}, data_root={self.data_root}, samples_root={self.samples_root})"
 

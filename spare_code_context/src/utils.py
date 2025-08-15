@@ -135,3 +135,60 @@ def handle_nodes_in_suffix(nodes: List[Node], completion_point: Tuple[int, int])
     Create adjusted node wrappers for nodes in the suffix with completion point offset.
     """
     return [AdjustedNode(node, completion_point) for node in nodes]
+
+def merge_overlapping_ranges(snippets):
+    """
+    Merge overlapping code snippets and return consolidated line ranges.
+    
+    Args:
+        snippets: List of snippet dicts with 'LineStart' and 'LineEnd' fields
+        
+    Returns:
+        List of merged ranges as (start_line, end_line) tuples
+    """
+    if not snippets:
+        return []
+    
+    # Extract and sort ranges by start line
+    ranges = [(s['start_line'], s['end_line']) for s in snippets]
+    ranges.sort(key=lambda x: x[0])
+    
+    merged_ranges = []
+    current_start, current_end = ranges[0]
+    
+    for start, end in ranges[1:]:
+        # Check if current range overlaps or touches the next range
+        if start <= current_end + 1:  # +1 to merge adjacent ranges too
+            # Extend current range
+            current_end = max(current_end, end)
+        else:
+            # No overlap, save current range and start new one
+            merged_ranges.append((current_start, current_end))
+            current_start, current_end = start, end
+    
+    # Don't forget the last range
+    merged_ranges.append((current_start, current_end))
+    
+    return merged_ranges
+
+
+def get_merged_snippets_from_file(snippets, file_lines):
+    """
+    Extract merged code snippets from original file.
+    
+    Args:
+        snippets: List of snippet dicts
+        file_lines: List of strings (lines from original file)
+        
+    Returns:
+        List of merged code snippets as strings
+    """
+    merged_ranges = merge_overlapping_ranges(snippets)
+    merged_snippets = []
+    
+    for start_line, end_line in merged_ranges:
+        # Convert to 0-based indexing for Python list slicing
+        snippet_lines = file_lines[start_line - 1:end_line]
+        merged_snippets.append('\n'.join(snippet_lines))
+    
+    return merged_snippets

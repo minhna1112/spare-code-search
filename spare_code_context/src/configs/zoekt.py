@@ -1,5 +1,6 @@
 import sys; sys.path.append(".")
 from configs.base import BaseConfig
+from configs.constants import NUM_CONTEXT_LINES
 from enum import Enum
 import os
 
@@ -32,7 +33,7 @@ class SearchConfig(BaseConfig):
     """
     Configuration class for search settings.
     """
-    num_context_lines: int = os.getenv('NUM_CONTEXT_LINES', 10)
+    num_context_lines: int = os.getenv('NUM_CONTEXT_LINES', NUM_CONTEXT_LINES)
     max_results: int = os.getenv('MAX_RESULTS', 10)
     max_retries: int = os.getenv('MAX_RETRIES', 3)
     retry_delay: float = os.getenv('RETRY_DELAY', 0.2)

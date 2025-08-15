@@ -46,7 +46,7 @@ class Preprocessor:
     def generate_diff(self, datapoint: DataPoint | Dict) -> str:
         original_code = self.get_original_code(datapoint)
         incomplete_code = self.generate_incomplete_code(datapoint)
-        diff = extract_diff(incomplete_code, original_code)
+        diff = extract_diff(incomplete_code, original_code) # SEPARATOR_COMMENT should be inside the diff also
         return diff
 
     def detect_completion_point(self, datapoint: DataPoint | Dict) -> tuple[int, int]:

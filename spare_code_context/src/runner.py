@@ -1,8 +1,9 @@
 from preprocessor import Preprocessor
-from configs.base import PreprocessorConfig
+from configs.base import PreprocessorConfig, PostProcessorConfig
 from configs.zoekt import QueryGeneratorConfig
 from datapoint import DataPoint, Prediction
 from zoekt_query_generator.query_generator import ZoektQueryGenerator
+from post_processor import PostProcessor
 from logging import getLogger
 import os
 import jsonlines
@@ -84,8 +85,6 @@ class Runner:
         for datapoint in tqdm(completion_points):
             queries.append(self.run(datapoint))
             
-        predictions = []
-
         self.write_predictions(predictions, output_file=os.path.join(self.config.predictions_root, f"{self.config.language}-{self.config.stage}-predictions.jsonl"))
         self.save_queries(queries)
         
@@ -103,7 +102,7 @@ class Runner:
             self.search_requester.zoekt_search_on_query_point(query_point)
         print(f"Total successful searches: {self.search_requester.num_successful_searches}")
         print(f"Total failed searches: {self.search_requester.num_failed_searches}")
-
+        
 
 if __name__ == "__main__":
    
