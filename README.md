@@ -19,28 +19,28 @@ To prepare data for the starter kit:
 ### Clone the repository and its submodules (Zoekt)
 
 ```bash
-git clone --recurse-submodules https://github.com/minhna1112/spare-code-context.git
+git clone --recurse-submodules https://github.com/minhna1112/spare-code-search.git
 git submodule update --remote zoekt
 ```
 ### Build the Zoekt Code Search Server Docker images on local machine
 ```bash
- cd zoekt && docker build -t zoekt-local:v0.0.1 .
+ cd zoekt && docker build -t zoekt-local:v0.0.1 . && docker tag zoekt-local:v0.0.1 zoekt-local:latest
 ```
 ## Index the data
 To index the data, you need to run the `zoekt-indexer` service. This service will read the data from the `data` folder and index it for searching. 
 ```bash
-STAGE=public LANGUAGE=kotlin docker compose up zoekt-indexer
+STAGE=public LANGUAGE=kotlin docker-compose up zoekt-indexer
 ```
 The Indexing process will take some time, depending on the size of the data and your machine's performance. Once the indexing is complete, you can start the `zoekt-webserver` service to provide a search interface.
 ```bash
-STAGE=public LANGUAGE=kotlin docker compose up zoekt-webserver
+STAGE=public LANGUAGE=kotlin docker-compose up zoekt-webserver
 ```
 
 
 ### Build and run the Spare Code Context Docker image
 Everything is set up, and you can now build and run the Spare Code Context Docker image. Everytime you want to run the Spare Code Context, you need to run the following command:
 ```bash
-docker compose up spare-code-context --build --force-recreate
+docker-compose up spare-code-context --build --force-recreate
 ```
 You can modify the `docker-compose.yml` file to set the appropriate environment variables for your `STAGE` and `LANGUAGE`. All other volumes and environment variables are set in the `docker-compose.yml` file.
 ```yml
