@@ -1,7 +1,8 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple
 
-
+class QueryPoint(BaseModel):
+    candidates: Dict[str, str]
 class Prediction(BaseModel):
     context: str = ""
     prefix: str = ""

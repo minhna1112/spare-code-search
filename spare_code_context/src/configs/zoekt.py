@@ -37,3 +37,4 @@ class SearchConfig(BaseConfig):
     max_retries: int = os.getenv('MAX_RETRIES', 3)
     retry_delay: float = os.getenv('RETRY_DELAY', 0.2)
     zoekt_url: str = os.getenv('ZOEKT_URL', 'http://localhost:6070/api/search')
+    max_candidates_used: int = os.getenv('MAX_CANDIDATES_USED', 10)

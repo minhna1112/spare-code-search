@@ -2,8 +2,12 @@ from configs.zoekt import SearchConfig
 import requests
 from urllib3.exceptions import NewConnectionError
 from requests.exceptions import ConnectionError, Timeout , RequestException
+from datapoint import QueryPoint
 import  json
 import time
+from logging import getLogger
+
+logger = getLogger(__name__)
 class ZoektSearchRequester:
     """
     A class to handle search requests to Zoekt.
@@ -11,7 +15,30 @@ class ZoektSearchRequester:
     
     def __init__(self, config: SearchConfig):
         self.config = config
+        self.num_successful_searches = 0
+        self.num_failed_searches = 0
 
+    def zoekt_search_on_query_point(
+            self,
+            query_point: QueryPoint):
+        candidates = query_point.candidates
+        count = 0
+        for _, query in candidates.items():
+            result = self.zoekt_search_request(query)
+            if result and "Result" in result and "Files" in result["Result"]:
+                files = result["Result"]["Files"]
+                if files:
+                    logger.info(f"Found {len(files)} files for query: {query}")
+                    self.num_successful_searches += 1
+                    return result
+            # stop when reached max candidates used
+            if count >= self.config.max_candidates_used:
+                logger.info(f"Reached max candidates used: {self.config.max_candidates_used}")
+                break
+            count += 1
+        self.num_failed_searches += 1
+        return {"Result": {"Files": [], "FileCount": 0}}
+    
     def zoekt_search_request(
                         self,
                         query: str,
@@ -51,52 +78,53 @@ class ZoektSearchRequester:
                 
                 # Check if response is successful
                 if response.status_code == 200:
+                    # print(response.json())
                     return response.json()
                 else:
-                    print(f"HTTP {response.status_code} error: {response.text}")
+                    logger.error(f"HTTP {response.status_code} error: {response.text}")
                     if attempt < self.config.max_retries:
-                        print(f"Retrying in {self.config.retry_delay} seconds... (attempt {attempt + 1}/{self.config.max_retries})")
+                        logger.info(f"Retrying in {self.config.retry_delay} seconds... (attempt {attempt + 1}/{self.config.max_retries})")
                         time.sleep(self.config.retry_delay)
                         continue
                     else:
-                        print("Max retries reached. Returning empty result.")
+                        logger.info("Max retries reached. Returning empty result.")
                         return {"Result": {"Files": [], "FileCount": 0}}
                         
             except (ConnectionError, NewConnectionError) as e:
-                print(f"Connection error on attempt {attempt + 1}: {e}")
+                logger.error(f"Connection error on attempt {attempt + 1}: {e}")
                 if attempt < self.config.max_retries:
-                    print(f"Zoekt service might be down. Retrying in {self.config.retry_delay} seconds...")
+                    logger.info(f"Zoekt service might be down. Retrying in {self.config.retry_delay} seconds...")
                     time.sleep(self.config.retry_delay)
                 else:
-                    print("Failed to connect to Zoekt service after all retries.")
+                    logger.info("Failed to connect to Zoekt service after all retries.")
                     print("Please check if Zoekt is running on http://localhost:6070")
                     return {"Result": {"Files": [], "FileCount": 0}}
                     
             except Timeout as e:
-                print(f"Request timeout on attempt {attempt + 1}: {e}")
+                logger.error(f"Request timeout on attempt {attempt + 1}: {e}")
                 if attempt < self.config.max_retries:
-                    print(f"Retrying in {self.config.retry_delay} seconds...")
+                    logger.info(f"Retrying in {self.config.retry_delay} seconds...")
                     time.sleep(self.config.retry_delay)
                 else:
-                    print("Request timed out after all retries.")
+                    logger.info("Request timed out after all retries.")
                     return {"Result": {"Files": [], "FileCount": 0}}
                     
             except RequestException as e:
-                print(f"Request error on attempt {attempt + 1}: {e}")
+                logger.error(f"Request error on attempt {attempt + 1}: {e}")
                 if attempt < self.config.max_retries:
-                    print(f"Retrying in {self.config.retry_delay} seconds...")
+                    logger.info(f"Retrying in {self.config.retry_delay} seconds...")
                     time.sleep(self.config.retry_delay)
                 else:
-                    print("Request failed after all retries.")
+                    logger.error("Request failed after all retries.")
                     return {"Result": {"Files": [], "FileCount": 0}}
                     
             except json.JSONDecodeError as e:
-                print(f"JSON decode error: {e}")
-                print(f"Response content: {response.text if 'response' in locals() else 'No response'}")
+                logger.error(f"JSON decode error: {e}")
+                logger.error(f"Response content: {response.text if 'response' in locals() else 'No response'}")
                 return {"Result": {"Files": [], "FileCount": 0}}
                 
             except Exception as e:
-                print(f"Unexpected error: {e}")
+                logger.error(f"Unexpected error: {e}")
                 return {"Result": {"Files": [], "FileCount": 0}}
         
         # This should never be reached, but just in case

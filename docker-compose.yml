@@ -12,6 +12,7 @@ services:
     environment:
       - STAGE=${STAGE:-practice}  # Default to 'public' stage if not set
       - LANGUAGE=${LANGUAGE:-python}  # Default to 'kotlin' language if not set
+      - ZOEKT_URL=http://zoekt-webserver:6070/api/search  # URL of the zoekt web server
 
   # Zoekt Web Server - provides search UI and API
   zoekt-webserver:
