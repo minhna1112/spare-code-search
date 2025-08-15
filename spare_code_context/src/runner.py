@@ -1,6 +1,8 @@
 from preprocessor import Preprocessor
 from configs.base import PreprocessorConfig
+from configs.zoekt import QueryGeneratorConfig
 from datapoint import DataPoint, Prediction
+from zoekt_query_generator.query_generator import ZoektQueryGenerator
 from logging import getLogger
 import os
 import jsonlines
@@ -16,10 +18,14 @@ class Runner:
     """
     Main runner class to execute the preprocessor with the given configuration.
     """
-    def __init__(self, preprocessor_config: PreprocessorConfig):
+    def __init__(self, 
+                 preprocessor_config: PreprocessorConfig,
+                 query_generator_config: QueryGeneratorConfig):
         self.config = preprocessor_config
         self.preprocessor = Preprocessor(preprocessor_config)
+        self.query_generator = ZoektQueryGenerator(query_generator_config)
         self.completion_points_file = os.path.join(preprocessor_config.data_root, f"{preprocessor_config.language}-{preprocessor_config.stage}.jsonl")
+        self.query_saved_file = os.path.join(query_generator_config.queries_root, f"{preprocessor_config.language}-{preprocessor_config.stage}-queries.jsonl")
 
     def load_completion_points(self) -> List[DataPoint]:
         """
@@ -39,6 +45,15 @@ class Runner:
             for prediction in predictions:
                 writer.write(prediction.dict())
         logger.info(f"Predictions written to {output_file}")
+        
+    def save_queries(self, queries: List[str]):
+        """
+        Save generated queries to a JSONL file.
+        """
+        with jsonlines.open(self.query_saved_file, 'w') as writer:
+            for query in queries:
+                writer.write({"queries": query})
+        logger.info(f"Queries saved to {self.query_saved_file}")
     
     def run(self, datapoint: DataPoint):
         """
@@ -48,18 +63,12 @@ class Runner:
         incomplete_code = self.preprocessor.generate_incomplete_code(datapoint.dict())
         diff = self.preprocessor.generate_diff(datapoint.dict())
         completion_point = self.preprocessor.detect_completion_point(datapoint.dict())
+        datapoint.completion_point = completion_point
+        datapoint.diff = diff
 
-        output = {
-            "original_code": original_code,
-            "incomplete_code": incomplete_code,
-            "diff": diff,
-            "completion_point": completion_point
-        }
+        queries = self.query_generator.construct_query_candidates_from_datapoint(datapoint)
 
-        logger.info(f"Processed datapoint: {datapoint.id}")
-        logger.debug(f"Output: {output}")
-
-        return output
+        return queries
     
     
     def run_all(self):
@@ -68,31 +77,23 @@ class Runner:
         """
         completion_points = self.load_completion_points()
         results = []
+        queries = []
         logger.info(f"Running preprocessor on {len(completion_points)} completion points.")
         for datapoint in tqdm(completion_points):
-            result = self.run(datapoint)
-            results.append(result)
-        
+            queries.append(self.run(datapoint))
+            
         predictions = []
-        for result in tqdm(results):
-            logger.debug(f"Result: {result}")
-            prediction = Prediction(
-                context = "a",
-                prefix = "b",
-                suffix = "c"
-            )
-            predictions.append(prediction)
 
         self.write_predictions(predictions, output_file=os.path.join(self.config.predictions_root, f"{self.config.language}-{self.config.stage}-predictions.jsonl"))
+        self.save_queries(queries)
 
 
 if __name__ == "__main__":
    
     # Load the configuration
     config = PreprocessorConfig()
-    
+    query_generator_config = QueryGeneratorConfig()
     # Create a runner instance and run it
-    runner = Runner(config)
+    runner = Runner(config, query_generator_config)
     results = runner.run_all()
-    
     

@@ -1,5 +1,5 @@
 from pydantic import BaseModel, Field
-from typing import List, Optional
+from typing import List, Optional, Tuple
 
 
 class Prediction(BaseModel):
@@ -56,6 +56,16 @@ class DataPoint(BaseModel):
         description="Archive file name containing the code"
     )
     
+    completion_point: Optional[Tuple[int, int]] = Field(
+        None, 
+        description="Optional tuple indicating the line and column of the completion point"
+    )
+    
+    diff: Optional[str] = Field(
+        None, 
+        description="Diff representation of changes between original and incomplete code"
+    )
+
     class Config:
         # Allow extra fields in case the dataset schema evolves
         extra = "allow"
@@ -70,6 +80,7 @@ class DataPoint(BaseModel):
                 "modified": ["t/integration/common.py", "t/integration/test_redis.py"],
                 "prefix": "from __future__ import absolute_import...",
                 "suffix": "                ]:\n                    producer.publish(...",
-                "archive": "celery__kombu-0d3b1e254f9178828f62b7b84f0307882e28e2a0.zip"
+                "archive": "celery__kombu-0d3b1e254f9178828f62b7b84f0307882e28e2a0.zip",
+                "completion_point": (10, 4)
             }
         }

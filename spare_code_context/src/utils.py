@@ -1,5 +1,5 @@
 import diff_match_patch
-from tree_sitter import Parser
+from tree_sitter import Parser, Node
 import tree_sitter
 from tree_sitter_languages import get_language, get_parser
 from transformers import AutoTokenizer
@@ -52,3 +52,86 @@ def get_tokenizer_name_from_model(model_name: str, language: str) -> str:
         """Handle Mellum model names"""
         return f"{model_name}{language}"
     return f"{model_name}"
+
+
+def rank_nodes_by_distance(nodes: List[Node], completion_line: int) -> List[Node]:
+    """
+    Rank nodes based on their distance to the completion line.
+    """
+    return sorted(nodes, key=lambda node: abs(node.start_point[0] - completion_line))
+
+
+def deduplicate_nodes(nodes: List[Node]) -> List[Node]:
+    """
+    Deduplicate nodes based on their text content.
+    """
+    seen = set()
+    deduplicated = []
+    for node in nodes:
+        if node.text.decode() not in seen:
+            seen.add(node.text.decode())
+            deduplicated.append(node)
+    return deduplicated
+
+
+# def handle_nodes_in_suffix(nodes: List[Node], completion_point: Tuple[int, int]) -> List[Node]:
+#     """
+#     Incrementing the start and end points of nodes in the suffix by the completion point.
+#     """
+#     for node in nodes:
+#         new_start_line, new_start_column = node.start_point[0], node.start_point[1]
+#         new_start_line += completion_point[0]
+#         new_start_column += completion_point[1]
+#         new_end_line, new_end_column = node.end_point[0], node.end_point[1]
+#         new_end_line += completion_point[0]
+#         new_end_column += completion_point[1]
+#         node.start_point = (new_start_line, new_start_column)
+#         node.end_point = (new_end_line, new_end_column)
+#     return nodes
+
+def find_first_and_last_nodes(nodes: List[Node]) -> Tuple[Node, Node]:
+    """
+    Find the first and last nodes in the list.
+    """
+    if not nodes:
+        return None, None
+    first_node = min(nodes, key=lambda node: node.start_point)
+    last_node = max(nodes, key=lambda node: node.end_point)
+    return first_node, last_node
+
+
+class AdjustedNode:
+    """
+    Wrapper class for tree_sitter.Node with adjusted position information.
+    """
+    def __init__(self, original_node: Node, start_offset: Tuple[int, int] = (0, 0)):
+        self.original_node = original_node
+        self.start_offset = start_offset
+    
+    @property
+    def start_point(self) -> Tuple[int, int]:
+        return (
+            self.original_node.start_point[0] + self.start_offset[0],
+            self.original_node.start_point[1] + self.start_offset[1]
+        )
+    
+    @property
+    def end_point(self) -> Tuple[int, int]:
+        return (
+            self.original_node.end_point[0] + self.start_offset[0],
+            self.original_node.end_point[1] + self.start_offset[1]
+        )
+    
+    @property
+    def text(self):
+        return self.original_node.text
+    
+    def __getattr__(self, name):
+        # Delegate other attributes to the original node
+        return getattr(self.original_node, name)
+
+def handle_nodes_in_suffix(nodes: List[Node], completion_point: Tuple[int, int]) -> List[AdjustedNode]:
+    """
+    Create adjusted node wrappers for nodes in the suffix with completion point offset.
+    """
+    return [AdjustedNode(node, completion_point) for node in nodes]

@@ -8,6 +8,7 @@ services:
     volumes:
       - ./data:/data  # Mount local data directory
       - ./predictions:/predictions  # Mount local predictions directory
+      - ./queries:/queries  # Mount local queries directory
     environment:
       - STAGE=${STAGE:-practice}  # Default to 'public' stage if not set
       - LANGUAGE=${LANGUAGE:-python}  # Default to 'kotlin' language if not set

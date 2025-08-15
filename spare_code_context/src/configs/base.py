@@ -2,7 +2,7 @@ from pydantic import BaseModel
 from .constants import SUPPORTED_LANGUAGES, PYTHON, MELLUM
 from typing import Literal
 import os
-
+from enum import Enum
 
 class BaseConfig(BaseModel):
     language: Literal[SUPPORTED_LANGUAGES] = os.getenv('LANGUAGE', PYTHON)
@@ -26,13 +26,5 @@ class PreprocessorConfig(BaseConfig):
 class PostProcessorConfig(PreprocessorConfig):
     def __repr__(self):
         return f"PostProcessorConfig(language={self.language}, model_name={self.model_name}, stage={self.stage}, use_tokenizer={self.use_tokenizer}, data_root={self.data_root}, samples_root={self.samples_root})"
-class SearchConfig:
-    """
-    Configuration class for search settings.
-    """
-    def __init__(self, language: str = "python", model_name: str = "mistralai/Codestral-22B-v0.1"):
-        self.language = language
-        self.model_name = model_name
 
-    def __repr__(self):
-        return f"SearchConfig(language={self.language}, model_name={self.model_name})"
+
