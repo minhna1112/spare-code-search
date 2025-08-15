@@ -126,15 +126,15 @@ class Runner:
         logger.info(f"Running pipeline on {len(completion_points)} completion points.")
         
         for datapoint in tqdm(completion_points, desc="Processing datapoints"):
-            # try:
+            try:
                 query_point, prediction = self.run(datapoint)
                 all_queries.append(query_point)
                 all_predictions.append(prediction)
-            # except Exception as e:
-            #     logger.error(f"Error processing datapoint {datapoint.id}: {e}")
-            #     # Add empty results for failed datapoints to maintain alignment
-            #     all_queries.append(QueryPoint(candidates={}))
-            #     all_predictions.append(Prediction())
+            except Exception as e:
+                logger.error(f"Error processing datapoint {datapoint.id}: {e}")
+                # Add empty results for failed datapoints to maintain alignment
+                all_queries.append(QueryPoint(candidates={}))
+                all_predictions.append(Prediction())
         
         # Save results
         self.save_queries(all_queries)
