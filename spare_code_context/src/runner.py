@@ -58,7 +58,20 @@ class Runner:
             for prediction in predictions:
                 writer.write(prediction.dict()) if isinstance(prediction, Prediction) else writer.write(prediction)
         logger.info(f"Predictions written to {output_file}")
-        
+
+    def write_prediction_and_query_online(self, prediction: Prediction | dict, query: QueryPoint | dict) -> None:
+        """
+        Write predictions and queries to a JSONL file.
+        """
+        predictions_output_file: str = os.path.join(
+            self.config.predictions_root, 
+            f"{self.config.language}-{self.config.stage}-predictions.jsonl"
+        )
+        with jsonlines.open(predictions_output_file, 'a') as writer:
+            writer.write(prediction.dict()) if isinstance(prediction, Prediction) else writer.write(prediction)
+        with jsonlines.open(self.query_saved_file, 'a') as writer:
+            writer.write(query.dict()) if isinstance(query, QueryPoint) else writer.write(query)
+            
     def save_queries(self, queries: List[QueryPoint]) -> None:
         """
         Save generated queries to a JSONL file.
@@ -130,19 +143,22 @@ class Runner:
                 query_point, prediction = self.run(datapoint)
                 all_queries.append(query_point)
                 all_predictions.append(prediction)
+                self.write_prediction_and_query_online(prediction, query_point)
+                
             except Exception as e:
                 logger.error(f"Error processing datapoint {datapoint.id}: {e}")
                 # Add empty results for failed datapoints to maintain alignment
                 all_queries.append(QueryPoint(candidates={}))
                 all_predictions.append(Prediction())
+                self.write_prediction_and_query_online(Prediction(context="", prefix=datapoint.prefix, suffix=datapoint.suffix), QueryPoint(candidates={}))
         
-        # Save results
-        self.save_queries(all_queries)
-        predictions_output_file: str = os.path.join(
-            self.config.predictions_root, 
-            f"{self.config.language}-{self.config.stage}-predictions.jsonl"
-        )
-        self.write_predictions(all_predictions, output_file=predictions_output_file)
+        # # Save results
+        # self.save_queries(all_queries)
+        # predictions_output_file: str = os.path.join(
+        #     self.config.predictions_root, 
+        #     f"{self.config.language}-{self.config.stage}-predictions.jsonl"
+        # )
+        # self.write_predictions(all_predictions, output_file=predictions_output_file)
 
     def search_from_saved_queries(self) -> None:
         """
