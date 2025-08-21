@@ -3,6 +3,11 @@ from configs.constants import SEPARATOR_COMMENT
 import os
 from preprocessor import DataPoint, Preprocessor
 from utils import get_merged_snippets_from_file
+
+import logging
+# logging.basicConfig(level=logging.ERROR)
+logger = logging.getLogger(__name__)
+
 class PostProcessor:
     def __init__(self, config: PostProcessorConfig, preprocessor: Preprocessor) -> None:
         self.config = config
@@ -36,7 +41,7 @@ class PostProcessor:
         Postprocess the search results to extract relevant information.
         """
         if 'Result' not in search_results or 'Files' not in search_results['Result'] or search_results['Result']['FileCount'] == 0:
-            print("No search results found or no files in the results.")
+            logger.error("No search results found or no files in the results.")
             return {"context": ""}
 
         max_context_tokens = total_max_context_tokens // self.config.top_k_file
@@ -87,8 +92,7 @@ class PostProcessor:
             prefix = datapoint['prefix']
 
         if self.config.use_diff_prefix and self.config.use_diff_suffix:
-            prefix = datapoint['diff'].split(SEPARATOR_COMMENT)[0]
-            suffix = datapoint['diff'].split(SEPARATOR_COMMENT)[1]
+            prefix, suffix = self.preprocessor.extract_diff_prefix_and_suffix(datapoint['diff'])
 
         num_token_from_prefix_and_suffix = self.count_tokens(prefix + suffix)
         possible_context_tokens = self.config.max_tokens - num_token_from_prefix_and_suffix - self.config.max_reserved_tokens # reserved tokens for the model to generate
