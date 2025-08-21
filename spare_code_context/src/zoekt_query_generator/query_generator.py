@@ -17,13 +17,24 @@ class ZoektQueryGenerator:
         self.function_and_class_extractor = FunctionAndClassExtractor(config.language)
         self.navigation_expression_extractor = NavigationExpressionExtractor(config.language)
         self.wild_identifier_extractor = WildIdentifierExtractor(config.language)
+        
+    @staticmethod
+    def extract_diff_prefix_and_suffix(diff: str) -> tuple[str, str]:
+        """
+        Separate the prefix and suffix from the diff.
+        """
+        splitted = diff.split(SEPARATOR_COMMENT)
+        if len(splitted) < 2:
+            return splitted[0], ""
+        return splitted[0], splitted[1]
+
 
     def find_all_nodes(self, datapoint: DataPoint) -> List[Node | AdjustedNode]:
         """
         Find all relevant nodes in the given datapoint.
         """
         function_and_class_nodes, navigation_expression_nodes, wild_identifier_nodes = [], [], []
-        diff_prefix, diff_suffix = datapoint.diff.split(SEPARATOR_COMMENT, 1)
+        diff_prefix, diff_suffix = ZoektQueryGenerator.extract_diff_prefix_and_suffix(datapoint.diff)
         diff = datapoint.diff.replace(SEPARATOR_COMMENT, "")
         
         for code in [diff, diff_prefix]:
