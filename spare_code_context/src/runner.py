@@ -118,7 +118,7 @@ class Runner:
         
         # Create query point
         query_point: QueryPoint = QueryPoint(candidates=query_candidates) if query_candidates else QueryPoint(candidates={})
-        logger.info(f"Generated query point: {query_point}")
+        logger.debug(f"Generated query point: {query_point}")
         
         # Search for context
         search_results: Dict[str, Any] = self.search_requester.zoekt_search_on_query_point(query_point)
@@ -139,6 +139,7 @@ class Runner:
         logger.info(f"Running pipeline on {len(completion_points)} completion points.")
         
         for datapoint in tqdm(completion_points, desc="Processing datapoints"):
+            logger.info(f"Processing datapoint {datapoint.id} ")
             try:
                 query_point, prediction = self.run(datapoint)
                 all_queries.append(query_point)
@@ -194,6 +195,10 @@ class Runner:
 
 
 if __name__ == "__main__":
+    # get the logger
+    from logging import basicConfig, INFO
+    basicConfig(level=INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+    logger = getLogger(__name__)
     # Load the configuration
     config: PreprocessorConfig = PreprocessorConfig()
     query_generator_config: QueryGeneratorConfig = QueryGeneratorConfig()
