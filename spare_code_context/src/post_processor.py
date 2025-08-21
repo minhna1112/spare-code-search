@@ -93,6 +93,9 @@ class PostProcessor:
 
         if self.config.use_diff_prefix and self.config.use_diff_suffix:
             prefix, suffix = self.preprocessor.extract_diff_prefix_and_suffix(datapoint['diff'])
+            if not prefix.strip() or not suffix.strip(): # gracefully handle empty prefixes/suffixes in diff
+                prefix = datapoint['prefix']
+                suffix = datapoint['suffix']
 
         num_token_from_prefix_and_suffix = self.count_tokens(prefix + suffix)
         possible_context_tokens = self.config.max_tokens - num_token_from_prefix_and_suffix - self.config.max_reserved_tokens # reserved tokens for the model to generate
