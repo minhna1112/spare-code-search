@@ -40,7 +40,7 @@ STAGE=public LANGUAGE=kotlin docker-compose up zoekt-webserver
 ### Build and run the Spare Code Context Docker image
 Everything is set up, and you can now build and run the Spare Code Context Docker image. Everytime you want to run the Spare Code Context, you need to run the following command:
 ```bash
-docker-compose up spare-code-context --build --force-recreate
+docker-compose up --build --force-recreate spare-code-context
 ```
 You can modify the `docker-compose.yml` file to set the appropriate environment variables for your `STAGE` and `LANGUAGE`. All other volumes and environment variables are set in the `docker-compose.yml` file.
 ```yml
