@@ -4,8 +4,21 @@ Official implementation of the "SpareCodeSearch: How to *search* for *code* cont
 
 This solution also won the golden price in [Kotlin track](https://lp.jetbrains.com/research/context-collection-competition/?tab-1756138596455-4232=kotlin) 🥇 and the silver price in [Python track](https://lp.jetbrains.com/research/context-collection-competition/?tab-1756138596455-4232=python) 🥈 of the corresponding Context Collection Competition organized by Jetbrains and Mistral AI.
 
-## Prepare Data
-The structure for data is kept in accordance with the original competition data structure, which is as follows:
+## Quickstart
+SpareCodeSearch ultilizes [Zoekt](https://github.com/sourcegraph/zoekt) for key-word based search. No GPU is required for this process. Make sure you have [Docker engine](https://docs.docker.com/engine/) and [Docker Compose](https://docs.docker.com/compose/install/) installed to run the submodules and microservices included in this project.
+### Clone the repository and its submodules (Zoekt)
+```bash
+git clone --recurse-submodules https://github.com/minhna1112/spare-code-search.git
+git submodule update --remote zoekt
+```
+The submodule [zoekt](https://github.com/minhna1112/zoekt) is a forked version from the original repository provided by Sourcegraph. Instead of using the current Zoekt [image](https://hub.docker.com/r/sourcegraph/zoekt) on Dockerhub, we chose to build the image from scratch, with `ctags`, `zoekt-indexserver`, and `zoekt-webserver` installed in the process. See the [Dockerfile](https://github.com/minhna1112/zoekt/blob/main/Dockerfile) for more details.
+### Build the Zoekt Code Search Server Docker image on local machine
+Run the following command to build the Zoekt Docker image:
+```bash
+ cd zoekt && docker build -t zoekt-local:v0.0.1 . && docker tag zoekt-local:v0.0.1 zoekt-local:latest
+```
+### Prepare data for indexing:
+The structure for data is kept in accordance with the original Code Context competition data structure, which is as follows:
 ```bash
 data
 ├── {language}-{stage}.jsonl # Competition data
@@ -13,35 +26,38 @@ data
     └── {owner}__{repository}-{revision} # Repository revision used for collecting context
         └── repository contents
 ```
+More details on how to download and prepare the original competition data can be found in its [starter repository](https://github.com/JetBrains-Research/ase2025-starter-kit?tab=readme-ov-file#getting-started).
 
-To prepare data for the starter kit:
-1. Download the data for the respective stage from [the shared folder](https://drive.google.com/drive/folders/1wcpq7ob33z5wHNFzUaiJWuHWw8sNuumC). Please note: unpacked data takes ~10GB on disk.
-2. Put the `{language}-{stage}.jsonl` file (datapoints) and the `{language}-{stage}.zip` archive (repos) to the `data` folder.
-3. Run `./prepare_data.sh practice python`, possibly replacing `practice` with the stage and `python` with `kotlin`.
-
-## Build and Run Spare Code Context
-### Clone the repository and its submodules (Zoekt)
-
-```bash
-git clone --recurse-submodules https://github.com/minhna1112/spare-code-search.git
-git submodule update --remote zoekt
-```
-### Build the Zoekt Code Search Server Docker images on local machine
-```bash
- cd zoekt && docker build -t zoekt-local:v0.0.1 . && docker tag zoekt-local:v0.0.1 zoekt-local:latest
+To use your own custom data, make sure to follow the same directory structure as the original competition data. Each datapoint in the JSONL file should correspond to the following format.
+```json
+{
+  "id": "revsionID",
+  "repo": "owner/repoName",
+  "revision": "repoRevision",
+  "path": "path/to/the/file/containing/completion/point",
+  "modified": [
+    "paths/to/files, that/are/modified, in/the/same/revision"
+  ],
+  "prefix": "incompletedCodeBeforeCompletionPoint",
+  "suffix": "incompletedcodeAftercompletionPoint",
+  "archive": "this is optional"
+}
 ```
 ### Step 1: Index the data
-To index the data, you need to run the `zoekt-indexer` service. This service will read the data from the `data` folder and index it for searching. 
+After preparing the data, to index it, you need to run the `zoekt-indexer` service. This service will read the data from the `data` folder and index it for searching. Each datapoint (corresponding to a JSON line in the `{language}-{stage}.jsonl` file) will be indexed as a single shard in the Zoekt index.
 ```bash
 STAGE=public LANGUAGE=kotlin docker-compose up zoekt-indexer
 ```
+You can modify the environment variables to match your specific use case (stage and language). The Indexing process will take some time, depending on the size of the data and your machine's performance. On a M3 Macbook Air, the indexing process took about 10-15 minutes, for a dataset of 300-400 repositories. More on how to config the memory and CPU usages for indexing could be found in this Zoekt's [thread](https://github.com/sourcegraph/zoekt/issues/840). 
 ### Step 2: Start the Zoekt web server
-The Indexing process will take some time, depending on the size of the data and your machine's performance. Once the indexing is complete, you can start the `zoekt-webserver` service to provide a search interface.
+ Once the indexing is complete, you can start the `zoekt-webserver` service, exposing `/api/search` at default port 6070. 
 ```bash
 STAGE=public LANGUAGE=kotlin docker-compose up zoekt-webserver
 ```
+On your local machine, a web browser can be used to access the search interface at `http://localhost:6070/`.
+ ![Zoekt's UI for Code Search webserver](docs/figs/image.png)
 ### Step 3: Build and run the Spare Code Context Docker image
-Everything is set up, and you can now build and run the Spare Code Context Docker image. Everytime you want to run the Spare Code Context, you need to run the following command:
+Once everything with Zoekt is set up, and you can now build and run the Spare Code Context Docker image. Everytime you want to run the Spare Code Context, you need to run the following command, which will re-build the image and re-recreate the container.
 ```bash
 docker-compose up spare-code-context --build --force-recreate
 ```
@@ -61,3 +77,19 @@ volumes:
     - ./queries:/queries  # Mount local queries directory
 ```
 After every run, you can find the predictions in the `predictions` folder, which will be created if it does not exist. The predictions will be saved in the format `{language}-{stage}-predictions.jsonl`, where `language` and `stage` are the same as in the `docker-compose.yml` file.
+
+## How it works?
+Details on the inner workings of the SpareCodeSearch can be found in the technical [design document](docs/how_it_works.md).
+
+## Citation
+If you want to use the code from this repository, please cite it as follows:
+
+```
+@misc{spare-code-search,
+  author = {Minh Nguyen},
+  title = {Spare Code Search},
+  year = {2025},
+  publisher = {GitHub},
+  journal = {GitHub Repository},
+  url = {https://github.com/minhna1112/spare-code-context}
+}
