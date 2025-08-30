@@ -44,22 +44,35 @@ To use your own custom data, make sure to follow the same directory structure as
 }
 ```
 ### Step 1: Index the data
-After preparing the data, to index it, you need to run the `zoekt-indexer` service. This service will read the data from the `data` folder and index it for searching. Each datapoint (corresponding to a JSON line in the `{language}-{stage}.jsonl` file) will be indexed as a single shard in the Zoekt index.
+After preparing the data, to index it, you need to run the `zoekt-indexer` service. This service will read the data from the `data` folder and index it for searching. Each datapoint (corresponding to a JSON line in the `{language}-{stage}.jsonl` file) will be indexed as a single shard in the Zoekt index. For starting each of the service below, please you Docker compose: 
 ```bash
 STAGE=public LANGUAGE=kotlin docker-compose up zoekt-indexer
 ```
-You can modify the environment variables to match your specific use case (stage and language). The Indexing process will take some time, depending on the size of the data and your machine's performance. On a M3 Macbook Air, the indexing process took about 10-15 minutes, for a dataset of 300-400 repositories. More on how to config the memory and CPU usages for indexing could be found in this Zoekt's [thread](https://github.com/sourcegraph/zoekt/issues/840). 
+For Docker engine with Docker CLI greater than `v20.10`, `compose` plugin can be used, replacing the `docker-compose` standalone applicaiton
+```bash
+STAGE=public LANGUAGE=kotlin docker compose up zoekt-indexer
+```
+You can modify the environment variables to match your specific use case (stage and language). The Indexing process will take some time, depending on the size of the data and your machine's performance. On a M3 Macbook Air, the indexing process took about 10-15 minutes, for a dataset of 300-400 repositories. More on how to config the memory and CPU usages for indexing could be found in this Zoekt's [thread](https://github.com/sourcegraph/zoekt/issues/840).
 ### Step 2: Start the Zoekt web server
  Once the indexing is complete, you can start the `zoekt-webserver` service, exposing `/api/search` at default port 6070. 
 ```bash
 STAGE=public LANGUAGE=kotlin docker-compose up zoekt-webserver
 ```
+or with `compose` plugin
+```bash
+STAGE=public LANGUAGE=kotlin docker compose up zoekt-webserver
+```
+
 On your local machine, a web browser can be used to access the search interface at `http://localhost:6070/`.
  ![Zoekt's UI for Code Search webserver](docs/figs/image.png)
 ### Step 3: Build and run the Spare Code Context Docker image
 Once everything with Zoekt is set up, and you can now build and run the Spare Code Context Docker image. Everytime you want to run the Spare Code Context, you need to run the following command, which will re-build the image and re-recreate the container.
 ```bash
 docker-compose up spare-code-context --build --force-recreate
+```
+or with `compose` plugin
+```bash
+docker compose up spare-code-context --build --force-recreate
 ```
 You can modify the `docker-compose.yml` file to set the appropriate environment variables for your `STAGE` and `LANGUAGE`. All other volumes and environment variables are set in the `docker-compose.yml` file.
 ```yml
