@@ -90,6 +90,27 @@ volumes:
     - ./queries:/queries  # Mount local queries directory
 ```
 After every run, you can find the predictions in the `predictions` folder, which will be created if it does not exist. The predictions will be saved in the format `{language}-{stage}-predictions.jsonl`, where `language` and `stage` are the same as in the `docker-compose.yml` file.
+There will be two types of outputs generated from the Spare Code Context service:
+1. **Predictions**: These are the outputs used for submission to the competition. They represent the code context inside each shard founded by our solution, which serve as the inputs for the Code Language Models to generate the missing completions.  They will be saved in single JSONL file the `predictions` folder. Format of each prediction point:
+```json
+{
+  "context": "The join string of every context founded by Spare Code Search",
+  "prefix": "prefix string ",
+  "suffix": "suffix string"
+}
+```
+2. **Queries**: These are the queries used to retrieve the code context, via sending them to the Zoekt web server' search API. They will be saved in the `queries` folder, also as a JSONL file, formatting as:
+```json
+{
+  "candidates": 
+  {
+    "query_type_a": "The query string for type A"
+  },
+  {
+    "query_type_b": "The query string for type B"
+  }
+}
+```
 
 ## How it works?
 Details on the inner workings of the SpareCodeSearch can be found in the technical [design document](docs/how_it_works.md).
