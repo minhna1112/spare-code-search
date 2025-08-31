@@ -8,10 +8,12 @@ Code Language Models (CLMs) have shown great promise in generating code, given t
 ## Technical Details
 ### System Architecture
 This project aims to explore efficient methods for searching code without relying on extensive GPU resources. By leveraging keyword-based search techniques, we can provide a lightweight alternative for code context retrieval.
-1. Offline indexing phase
-2. Online retrieving phase
-### Zoekt Query Construction Strategies
-
+### Offline indexing phase with Zoekt
+- Zoekt
+- index into shards
+### Online context retrieving phase
+1. Zoekt Query Construction Strategies
+2. Post-processing of search results
 
 
 ### Findings and Discussion
