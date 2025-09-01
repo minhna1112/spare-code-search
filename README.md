@@ -118,6 +118,9 @@ There will be two types of outputs generated from the Spare Code Context service
 
 ## How it works?
 Details on the inner workings of the SpareCodeSearch can be found in the technical [design document](docs/how_it_works.md).
+<p align="center">
+    <img src="docs/figs/system_architecture.png" alt="System Architecture" width="750" />
+</p>
 
 ## Citation
 If you want to use the code from this repository, please cite it as follows:
